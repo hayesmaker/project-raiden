@@ -111,7 +111,7 @@ class SceneGame extends Scene {
     overlay.appendChild(svgElement);
 
     const numMissiles = 100;
-    const missileHeight = 300
+    const missileHeight = 400;
     for (let i = 0; i < numMissiles; i++) {
       const sourceIndex = Math.floor(Math.random() * launcherPositions.length);
       const targetIndex = Math.floor(Math.random() * targetPositions.length);
@@ -122,10 +122,10 @@ class SceneGame extends Scene {
 
       const missilePath = document.createElementNS("http://www.w3.org/2000/svg", "path");
       // d="M 100 200 C 100 100 300 100 300 200"
-      missilePath.setAttribute("d", `M ${targetX} ${targetY} C ${targetX} ${targetY - missileHeight} ${initialX} ${initialY - missileHeight} ${initialX} ${initialY}`);
+      missilePath.setAttribute("d", `M ${initialX} ${initialY} C ${initialX} ${initialY - missileHeight} ${targetX} ${targetY - missileHeight} ${targetX} ${targetY}`);
       missilePath.setAttribute("stroke", "#00ff00");
       missilePath.setAttribute("stroke-width", "5");
-      missilePath.setAttribute("stroke-opacity", "0.45");
+      missilePath.setAttribute("stroke-opacity", "0.1");
       missilePath.setAttribute("fill", "none");
       missilePath.setAttribute("class", "missile-path");
       svgElement.appendChild(missilePath);
