@@ -69,6 +69,11 @@ gsap.registerPlugin(DrawSVGPlugin);
     event.preventDefault();
     const keyName = event.key;
 
+    if (keyName ==="d") {
+      console.log("Debug Info:");
+      scene2.destroyMissile()
+    }
+
     if (keyName === "Control") {
       // do not alert when only Control key is pressed.
       return;
@@ -89,6 +94,7 @@ gsap.registerPlugin(DrawSVGPlugin);
         case '2':
           scene2.initTransitionIn({ animOptions: { x: 0 }})
           scene2.executeTimeline();
+          // scene2.initMissileDefence();
           // scene2.initTransitionIn();
           // scene2.executeTimeline();
           break;

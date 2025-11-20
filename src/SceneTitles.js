@@ -13,10 +13,6 @@ class Titles extends Scene {
   }
 
   initGfx() {
-    // { alias: 'logo-raid',
-    // { alias: 'logo-over',
-    // { alias: 'logo-moscow',
-
     const x1 = 330;
     const x2 = 740;
     const y1 = 490;
@@ -118,11 +114,7 @@ class Titles extends Scene {
       if (!this.isText(text)) continue;
       this.tl.to(text, {alpha: 1, delay: 0.5, duration: 0.75, ease: "power2.out"});
     }
-
-
   }
-
-
 
 }
 
