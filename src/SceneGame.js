@@ -1,6 +1,6 @@
 import Scene from "./Scene.js";
 import { gsap } from "gsap";
-import { CONSTS } from "./consts.js";
+// import { CONSTS } from "./consts.js";
 import { Sprite, Graphics } from "pixi.js";
 import { getScaleRatio4x3 } from "./utils/helpers.js";
 
@@ -22,29 +22,20 @@ class SceneGame extends Scene {
   constructor(props) {
     super(props);
     this.label = 'SceneGame';
-    this.missilePathPoints = [];
+    // this.missilePathPoints = [];
     this.state = {
       svgElement: null,
       missilePaths: [],
       missilePathPoints: [],
       missilesDestroyed: [],
+      currentRaidIndex: 0,
     }
+    this.initData();
     this.initGfx();
     this.svgEls = document.querySelectorAll('svg');
   }
 
-  initGfx() {
-    const spriteMap = Sprite.from("raid-map");
-    spriteMap.anchor.set(0);
-    console.log('this.startX', this.startX);
-    console.log('this.startY', this.startY);
-    this.addChild(spriteMap);
-
-    const scaleFactor = getScaleRatio4x3({ width: spriteMap.width });
-    spriteMap.scale.x = scaleFactor;
-    spriteMap.scale.y = scaleFactor;
-    spriteMap.y = 1080 - spriteMap.height;
-
+  initData() {
     // define 10 launcher positions
     const launcherPositions = [
       [
@@ -75,7 +66,6 @@ class SceneGame extends Scene {
         { x: 1260, y: 755 },
       ]
     ];
-
     const targetPositions = [
       { x: 20, y: 745 },
       { x: 15, y: 810 },
@@ -101,34 +91,52 @@ class SceneGame extends Scene {
       { x: 175, y: 870 },
       { x: 215, y: 875 },
       { x: 235, y: 915 },
-    ]
+    ];
 
-    for (const pos of launcherPositions[0]) {
+    this.launcherPositions = launcherPositions;
+    this.targetPositions = targetPositions;
+  }
+
+  initGfx() {
+    const spriteMap = Sprite.from("raid-map");
+    spriteMap.anchor.set(0);
+    console.log('this.startX', this.startX);
+    console.log('this.startY', this.startY);
+    this.addChild(spriteMap);
+
+    const scaleFactor = getScaleRatio4x3({ width: spriteMap.width });
+    spriteMap.scale.x = scaleFactor;
+    spriteMap.scale.y = scaleFactor;
+    spriteMap.y = 1080 - spriteMap.height;
+
+    for (const pos of this.launcherPositions[0]) {
       const launcher = new Graphics();
       launcher.rect(0, 0, 20, 10);
       launcher.fill(0x00ff00);
       launcher.x = pos.x;
-      launcher.y = pos.y
+      launcher.y = pos.y;
       this.addChild(launcher);
     }
-    for (const pos of launcherPositions[1]) {
+
+    for (const pos of this.launcherPositions[1]) {
       const launcher = new Graphics();
       launcher.rect(0, 0, 20, 10);
       launcher.fill(0xffff00);
       launcher.x = pos.x;
-      launcher.y = pos.y
+      launcher.y = pos.y;
       this.addChild(launcher);
     }
-    for (const pos of launcherPositions[2]) {
+
+    for (const pos of this.launcherPositions[2]) {
       const launcher = new Graphics();
       launcher.rect(0, 0, 20, 10);
       launcher.fill(0x0000ff);
       launcher.x = pos.x;
-      launcher.y = pos.y
+      launcher.y = pos.y;
       this.addChild(launcher);
     }
 
-    for (const pos of targetPositions) {
+    for (const pos of this.targetPositions) {
       const target = new Graphics();
       target.circle(0, 0, 10);
       target.fill(0xff0000);
@@ -147,39 +155,49 @@ class SceneGame extends Scene {
     svgElement.style.pointerEvents = "none"; // Make sure it doesn't block pointer events
     svgElement.style.overflow = "hidden";
 
-    // const pathElement = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    // // d="M 100 200 C 100 100 300 100 300 200"
-    // pathElement.setAttribute("d", "M 100 200 C 100 100 300 100 300 200");
-    // pathElement.setAttribute("stroke", "red");
-    // pathElement.setAttribute("stroke-width", "5");
-    // pathElement.setAttribute("fill", "none");
-    // pathElement.setAttribute("class", "missile-path");
-
     const overlay = document.querySelector('#overlay');
-    // svgElement.appendChild(pathElement);
     overlay.appendChild(svgElement);
 
-    const numMissiles = 10;
-    const missileHeight = 400;
+    this.incomingRaid();
+  }
+
+  incomingRaid() {
+    console.log('incomingRaid');
+    const raidIndex = this.state.currentRaidIndex;
+    this.drawMissileLines(
+      raidIndex,
+      10,
+      400,
+      raidIndex === 0 ? '#00ff00' : raidIndex === 1 ? '#ffff00' : '#0000ff'
+    );
+    this.state.currentRaidIndex = raidIndex + 1;
+  }
+
+  drawMissileLines(launchSiteIndex = 0, numMissiles = 10, missileHeight = 400, colour = '#00ff00') {
+    // const numMissiles = 10;
+    // const missileHeight = 400;
+    // const launchSiteIndex = 0;
+    console.log('missilePathPoints:', this.state.missilePathPoints);
+
     for (let i = 0; i < numMissiles; i++) {
-      const sourceIndex = Math.floor(Math.random() * launcherPositions[0].length);
-      const targetIndex = Math.floor(Math.random() * targetPositions.length);
+      const sourceIndex = Math.floor(Math.random() * this.launcherPositions[launchSiteIndex].length);
+      const targetIndex = Math.floor(Math.random() * this.targetPositions.length);
       // Given cubic Bézier points
-      const p0 = { ...launcherPositions[0][sourceIndex] };
+      const p0 = { ...this.launcherPositions[launchSiteIndex][sourceIndex] };
       const p1 = { x: p0.x, y: p0.y - missileHeight };
-      const p2 = { x: targetPositions[targetIndex].x, y: targetPositions[targetIndex].y - missileHeight };
-      const p3 = { ...targetPositions[targetIndex] };
+      const p2 = { x: this.targetPositions[targetIndex].x, y: this.targetPositions[targetIndex].y - missileHeight };
+      const p3 = { ...this.targetPositions[targetIndex] };
 
       const missilePath = document.createElementNS("http://www.w3.org/2000/svg", "path");
       // d="M 100 200 C 100 100 300 100 300 200"
       missilePath.setAttribute("d", `M ${p0.x} ${p0.y} C ${p1.x} ${p1.y} ${p2.x} ${p2.y} ${p3.x} ${p3.y}`);
-      missilePath.setAttribute("stroke", "#00ff00");
+      missilePath.setAttribute("stroke", colour);
       missilePath.setAttribute("stroke-width", "5");
       missilePath.setAttribute("stroke-opacity", "0.1");
       missilePath.setAttribute("fill", "none");
       missilePath.setAttribute("class", "missile-path");
-      svgElement.appendChild(missilePath);
 
+      this.state.svgElement.appendChild(missilePath);
 
       // calculate random point along bezier curve
       // choose random t between 0.25 and 0.75 to avoid clustering at ends
@@ -199,22 +217,17 @@ class SceneGame extends Scene {
         Math.pow(t, 3) * p3.y;
 
       const randomPoint = { x: bx, y: by };
-      this.missilePathPoints.push(randomPoint);
+      // this.missilePathPoints.push(randomPoint);
       this.state.missilePathPoints.push(randomPoint);
       this.state.missilePaths.push(missilePath);
     }
-
-    console.log('missilePathPoints:', this.state.missilePathPoints);
-
   }
 
-  initText() {
-    // No text for this scene yet
-  }
+  initText() {}
 
   finalAnimComplete() {
     console.log('SceneGame finalAnimComplete');
-    this.tl.seek(100)
+    this.tl.seek(100);
   }
 
   initTransitionIn({animOptions} = {}) {

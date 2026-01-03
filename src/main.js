@@ -58,8 +58,8 @@ gsap.registerPlugin(DrawSVGPlugin);
   const overlayGuide = OverlayGuide();
   app.stage.addChild(overlayGuide);
 
-  // const scene2 = new SceneVideo(0);
-  // app.stage.addChild(scene2);
+  // const scene3 = new SceneVideo(0);
+  // app.stage.addChild(scene3);
 
   // scene2.initTransitionIn({ animOptions: { x: 0 }})
   // scene2.executeTimeline();
@@ -98,12 +98,19 @@ gsap.registerPlugin(DrawSVGPlugin);
           // scene2.initTransitionIn();
           // scene2.executeTimeline();
           break;
+
+        case 'ctrl3':
+        case '3':
+          console.log('wat');
+          scene2.incomingRaid();
+          scene2.initTransitionIn({ animOptions: { x: 0 }})
+          scene2.executeTimeline();
+
+          break;
         default:
           break;
 
       }
-
-
 
     } else {
       // alert(`Key pressed ${keyName}`);
