@@ -4,6 +4,7 @@ import { gsap } from "gsap";
 import {Sprite, Graphics, Text} from "pixi.js";
 import { getScaleRatio4x3 } from "./utils/helpers.js";
 import {CONSTS} from "./consts.js";
+import UIPanel from "./UIPanel.js";
 
 const SDI_POS = {
   x: 850,
@@ -195,7 +196,7 @@ class SceneGame extends Scene {
       missilePath.setAttribute("d", `M ${p0.x} ${p0.y} C ${p1.x} ${p1.y} ${p2.x} ${p2.y} ${p3.x} ${p3.y}`);
       missilePath.setAttribute("stroke", colour);
       missilePath.setAttribute("stroke-width", "5");
-      missilePath.setAttribute("stroke-opacity", "0.1");
+      missilePath.setAttribute("stroke-opacity", "0.5");
       missilePath.setAttribute("fill", "none");
       missilePath.setAttribute("class", `missile-path-${launchSiteIndex}`);
 
@@ -248,6 +249,11 @@ class SceneGame extends Scene {
     this.addChild(text2);
     text2.x = text.x;
     text2.y = text.y + text.height + padding;
+
+    const uiPanel1 = new UIPanel();
+    this.addChild(uiPanel1);
+    uiPanel1.x = text2.x;
+    uiPanel1.y = text2.y + text2.height + padding;
   }
 
   finalAnimComplete() {
