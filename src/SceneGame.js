@@ -1,8 +1,9 @@
 import Scene from "./Scene.js";
 import { gsap } from "gsap";
 // import { CONSTS } from "./consts.js";
-import { Sprite, Graphics } from "pixi.js";
+import {Sprite, Graphics, Text} from "pixi.js";
 import { getScaleRatio4x3 } from "./utils/helpers.js";
+import {CONSTS} from "./consts.js";
 
 const SDI_POS = {
   x: 850,
@@ -29,9 +30,11 @@ class SceneGame extends Scene {
       missilePathPoints: [],
       missilesDestroyed: [],
       currentRaidIndex: 0,
+      currentRaider: 'RedOctober',
     }
     this.initData();
     this.initGfx();
+    this.initText();
     this.svgEls = document.querySelectorAll('svg');
   }
 
@@ -92,7 +95,6 @@ class SceneGame extends Scene {
       { x: 215, y: 875 },
       { x: 235, y: 915 },
     ];
-
     this.launcherPositions = launcherPositions;
     this.targetPositions = targetPositions;
   }
@@ -195,7 +197,7 @@ class SceneGame extends Scene {
       missilePath.setAttribute("stroke-width", "5");
       missilePath.setAttribute("stroke-opacity", "0.1");
       missilePath.setAttribute("fill", "none");
-      missilePath.setAttribute("class", "missile-path");
+      missilePath.setAttribute("class", `missile-path-${launchSiteIndex}`);
 
       this.state.svgElement.appendChild(missilePath);
 
@@ -223,7 +225,30 @@ class SceneGame extends Scene {
     }
   }
 
-  initText() {}
+  initText() {
+    const textStyle = {
+      fontFamily: CONSTS.FONT_FAMILY,
+      fontSize: 24,
+      fill: 0xcccccc,
+      align: 'left',
+    };
+
+    const padding = 20;
+    const index = 0;
+    const text = new Text(`Raid Initiated by ${this.state.currentRaider}`, textStyle);
+    text.label = `text${index+1}`;
+    text.anchor.set(0);
+    this.addChild(text);
+    text.x = 20;
+    text.y = 20;
+
+    const text2 = new Text(`Missiles Incoming!`, textStyle);
+    text2.label = `text2-missiles-incoming`;
+    text2.anchor.set(0);
+    this.addChild(text2);
+    text2.x = text.x;
+    text2.y = text.y + text.height + padding;
+  }
 
   finalAnimComplete() {
     console.log('SceneGame finalAnimComplete');
@@ -242,11 +267,19 @@ class SceneGame extends Scene {
       }
     });
 
-    this.tl.from('.missile-path', {
+    this.tl.from(`.missile-path-${this.state.currentRaidIndex - 1}`, {
       duration: 1,
       drawSVG: 0,
       stagger: 0.1
     })
+  }
+
+  timeLineExtend() {
+    this.tl.from(`.missile-path-${this.state.currentRaidIndex - 1}`, {
+      duration: 1,
+      drawSVG: 0,
+      stagger: 0.1
+    });
   }
 
   destroyMissile() {

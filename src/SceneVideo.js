@@ -18,18 +18,25 @@ class Video extends Scene {
       autoPlay: true,
       autoLoad: true,
     });
-    this.videoRes.width = 192;
-    this.videoRes.height = 108;
-    this.addChild(this.videoRes);
+    this.videoRes.width = 1920/2;
+    this.videoRes.height = 1080/2;
+    // this.addChild(this.videoRes);
+    // this.videoRes
     this.sound = new Howl({
       src: ['./assets/clip7.mp4'],
-      autoplay: true,
+      autoplay: false,
       loop: false,
       volume: 0.5,
       onend: function() {
         console.log('Finished!');
       }
     });
+  }
+
+  playVideo() {
+    // this.videoRes.play();
+    this.sound.play();
+    this.addChild(this.videoRes);
   }
 }
 

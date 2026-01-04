@@ -1,9 +1,8 @@
-import { Application, Assets, Text } from "pixi.js";
-import { gsap } from "gsap";
-import { PixiPlugin } from "gsap/PixiPlugin";
-import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
+import {Application, Assets} from "pixi.js";
+import {gsap} from "gsap";
+import {PixiPlugin} from "gsap/PixiPlugin";
+import {DrawSVGPlugin} from "gsap/DrawSVGPlugin";
 import OverlayGuide from "./overlay-guide.js";
-import Scene from "./Scene.js";
 import SceneTitles from "./SceneTitles.js";
 import {CONSTS} from "./consts.js";
 import SceneVideo from "./SceneVideo.js";
@@ -22,22 +21,22 @@ gsap.registerPlugin(DrawSVGPlugin);
   document.getElementById("pixi-container").appendChild(app.canvas);
 
   Assets.addBundle('fonts', [
-    { alias: 'Amiga Forever Pro2', src: '/assets/amiga4ever_pro2-webfont.woff2' },
+    {alias: 'Amiga Forever Pro2', src: '/assets/amiga4ever_pro2-webfont.woff2'},
   ]);
 
   Assets.addBundle('images', [
-    { alias: 'overlay-guide', src: '/assets/overlay-guide.png' },
-    { alias: 'raid-map', src: '/assets/raid-map.png' },
-    { alias: 'logo-raid', src: '/assets/raid-logo-raid.png' },
-    { alias: 'logo-over', src: '/assets/raid-logo-over.png' },
-    { alias: 'logo-moscow', src: '/assets/raid-logo-moscow.png' },
-    { alias: 'base-black', src: '/assets/base-black.png' },
-    { alias: 'base-white', src: '/assets/base-white.png' },
-    { alias: 'raid-hammer', src: '/assets/raid-hammer-and-sickle.png' },
+    {alias: 'overlay-guide', src: '/assets/overlay-guide.png'},
+    {alias: 'raid-map', src: '/assets/raid-map.png'},
+    {alias: 'logo-raid', src: '/assets/raid-logo-raid.png'},
+    {alias: 'logo-over', src: '/assets/raid-logo-over.png'},
+    {alias: 'logo-moscow', src: '/assets/raid-logo-moscow.png'},
+    {alias: 'base-black', src: '/assets/base-black.png'},
+    {alias: 'base-white', src: '/assets/base-white.png'},
+    {alias: 'raid-hammer', src: '/assets/raid-hammer-and-sickle.png'},
   ]);
 
   Assets.addBundle('videos', [
-    { alias: 'video-1', src: '/assets/clip7.mp4' },
+    {alias: 'video-1', src: '/assets/clip7.mp4'},
   ]);
 
   await Assets.loadBundle(['fonts', 'images', 'videos']);
@@ -55,11 +54,11 @@ gsap.registerPlugin(DrawSVGPlugin);
   });
   app.stage.addChild(scene2);
 
-  const overlayGuide = OverlayGuide();
-  app.stage.addChild(overlayGuide);
-
   // const scene3 = new SceneVideo(0);
   // app.stage.addChild(scene3);
+
+  const overlayGuide = OverlayGuide();
+  app.stage.addChild(overlayGuide);
 
   // scene2.initTransitionIn({ animOptions: { x: 0 }})
   // scene2.executeTimeline();
@@ -69,7 +68,7 @@ gsap.registerPlugin(DrawSVGPlugin);
     event.preventDefault();
     const keyName = event.key;
 
-    if (keyName ==="d") {
+    if (keyName === "d") {
       console.log("Debug Info:");
       scene2.destroyMissile()
     }
@@ -84,7 +83,7 @@ gsap.registerPlugin(DrawSVGPlugin);
       // event.ctrlKey may be true if Ctrl key is pressed at the same time.
       console.log(`Combination of ctrlKey + ${keyName}`);
 
-      switch(keyName) {
+      switch (keyName) {
         case 'ctrl1':
         case '1':
           scene.initTransitionIn();
@@ -92,20 +91,17 @@ gsap.registerPlugin(DrawSVGPlugin);
           break;
         case 'ctrl2':
         case '2':
-          scene2.initTransitionIn({ animOptions: { x: 0 }})
+          scene2.initTransitionIn({animOptions: {x: 0}})
           scene2.executeTimeline();
-          // scene2.initMissileDefence();
-          // scene2.initTransitionIn();
-          // scene2.executeTimeline();
           break;
-
         case 'ctrl3':
         case '3':
-          console.log('wat');
           scene2.incomingRaid();
-          scene2.initTransitionIn({ animOptions: { x: 0 }})
-          scene2.executeTimeline();
-
+          scene2.timeLineExtend();
+          break;
+        case 'ctrl4':
+        case '4':
+          // scene3.playVideo();
           break;
         default:
           break;
@@ -130,7 +126,6 @@ gsap.registerPlugin(DrawSVGPlugin);
 
     }
   });
-
 
 
   // Listen for animate update
