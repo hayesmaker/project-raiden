@@ -254,6 +254,7 @@ class SceneGame extends Scene {
     this.addChild(uiPanel1);
     uiPanel1.x = text2.x;
     uiPanel1.y = text2.y + text2.height + padding;
+    uiPanel1.updateValue('01:30');
   }
 
   finalAnimComplete() {
@@ -277,7 +278,7 @@ class SceneGame extends Scene {
       duration: 1,
       drawSVG: 0,
       stagger: 0.1
-    })
+    });
   }
 
   timeLineExtend() {
