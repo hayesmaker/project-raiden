@@ -1,4 +1,5 @@
 export default class Timer {
+
     constructor () {
         this.isRunning = false;
         this.startTime = 0;
@@ -72,29 +73,38 @@ export default class Timer {
         return this.overallTime;
     }
 
-    startCountdown(textField, callback) {
+    startCountdown(textField, mins = 2, secs = 0, callback) {
         // let timer = new Timer();
-        this.setCountdownTime(MINS, SECS);
+        this.setCountdownTime(mins, secs);
         this.start();
+
+        const pad = (value) => {
+            if (value < 10) {
+                return '0' + value;
+            } else {
+                return value.toString();
+            }
+        };
 
         function timeConversion(millis) {
             //var days = Math.floor(millisec / (1000 * 60 * 60 * 24));
-            var hours = Math.max(0, Math.floor(millis / (1000 * 60 * 60)));
-            var minutes = Math.max(0, Math.floor(millis / (1000 * 60) - hours * 60));
+            //var hours = Math.max(0, Math.floor(millis / (1000 * 60 * 60)));
+            var minutes = Math.max(0, Math.floor(millis / (1000 * 60) ));
             var seconds = Math.max(0, Math.floor((millis / 1000) - minutes * 60));
             return {
-                hours: pad(hours),
+                //hours: pad(hours),
                 minutes: pad(minutes),
                 seconds: pad(seconds)
             }
         }
 
         this.interval = setInterval(() => {
-            const millis = Math.round(timer.getCountdown());
+            const millis = Math.round(this.getCountdown());
             const countdown = timeConversion(millis);
-            textField.text = countdown.hours + ":" + countdown.minutes + ":" + countdown.seconds;
+            textField.text = countdown.minutes + ":" + countdown.seconds;
             if (millis <= 0) {
                 callback.call(this);
+                this.stop();
             }
         }, 100);
     }

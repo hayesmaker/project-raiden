@@ -51,6 +51,10 @@ class UIPanel extends Container {
         this.valueText = valueText;
     }
 
+    set text (val) {
+        this.valueText.text = val;
+    }
+
     updateValue (val) {
         this.valueText.text = val;
     }

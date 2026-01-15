@@ -5,6 +5,7 @@ import {Sprite, Graphics, Text} from "pixi.js";
 import { getScaleRatio4x3 } from "./utils/helpers.js";
 import {CONSTS} from "./consts.js";
 import UIPanel from "./UIPanel.js";
+import Timer from "./utils/timer.js";
 
 const SDI_POS = {
   x: 850,
@@ -33,6 +34,7 @@ class SceneGame extends Scene {
       currentRaidIndex: 0,
       currentRaider: 'RedOctober',
     }
+    this.timerPanel1 = null;
     this.initData();
     this.initGfx();
     this.initText();
@@ -160,9 +162,10 @@ class SceneGame extends Scene {
 
     const overlay = document.querySelector('#overlay');
     overlay.appendChild(svgElement);
-
-    this.incomingRaid();
+    // this.incomingRaid();
   }
+
+
 
   incomingRaid() {
     console.log('incomingRaid');
@@ -174,6 +177,12 @@ class SceneGame extends Scene {
       raidIndex === 0 ? '#00ff00' : raidIndex === 1 ? '#ffff00' : '#0000ff'
     );
     this.state.currentRaidIndex = raidIndex + 1;
+
+    this.timer = new Timer();
+    // this.timer.setCountdownTime(1, 30); // 1 minute 30 seconds
+    this.timer.startCountdown(this.timerPanel1, 2, 0,() => {
+      console.log('Countdown complete');
+    });
   }
 
   drawMissileLines(launchSiteIndex = 0, numMissiles = 10, missileHeight = 400, colour = '#00ff00') {
@@ -255,6 +264,9 @@ class SceneGame extends Scene {
     uiPanel1.x = text2.x;
     uiPanel1.y = text2.y + text2.height + padding;
     uiPanel1.updateValue('01:30');
+    this.timerPanel1 = uiPanel1;
+
+
   }
 
   finalAnimComplete() {
@@ -266,18 +278,11 @@ class SceneGame extends Scene {
     super.initTransitionIn({
       animOptions,
     });
-
     this.tl.call(() => {
       // const svg = document.querySelectorAll('svg');
       for (const svgEl of this.svgEls) {
         svgEl.style.visibility = 'visible';
       }
-    });
-
-    this.tl.from(`.missile-path-${this.state.currentRaidIndex - 1}`, {
-      duration: 1,
-      drawSVG: 0,
-      stagger: 0.1
     });
   }
 
@@ -292,17 +297,17 @@ class SceneGame extends Scene {
   destroyMissile() {
     console.log('destroyMissile');
     // pick a random missile path point that hasn't been destroyed yet
-    const undestroyedPoints = this.state.missilePathPoints.filter((point, index) => {
+    const unDestroyedPoints = this.state.missilePathPoints.filter((point, index) => {
       return !this.state.missilesDestroyed.includes(index);
     });
 
-    if (undestroyedPoints.length === 0) {
+    if (unDestroyedPoints.length === 0) {
       console.log('All missiles already destroyed');
       return;
     }
 
-    const randomIndex = Math.floor(Math.random() * undestroyedPoints.length);
-    const pointToDestroy = undestroyedPoints[randomIndex];
+    const randomIndex = Math.floor(Math.random() * unDestroyedPoints.length);
+    const pointToDestroy = unDestroyedPoints[randomIndex];
     const pointIndex = this.state.missilePathPoints.indexOf(pointToDestroy);
     this.state.missilesDestroyed.push(pointIndex);
 
@@ -340,7 +345,7 @@ class SceneGame extends Scene {
       this.removeChild(explosion);
       this.state.svgElement.removeChild(this.state.missilePaths[pointIndex]);
       this.removeChild(defenceLaser)
-    })
+    });
 
     tl.play();
   }
