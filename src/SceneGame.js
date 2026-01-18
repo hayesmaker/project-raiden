@@ -1,9 +1,9 @@
 import Scene from "./Scene.js";
 import { gsap } from "gsap";
-// import { CONSTS } from "./consts.js";
-import {Sprite, Graphics, Text} from "pixi.js";
+import { Sprite, Graphics, Text } from "pixi.js";
+
 import { getScaleRatio4x3 } from "./utils/helpers.js";
-import {CONSTS} from "./consts.js";
+import { CONSTS } from "./consts.js";
 import UIPanel from "./UIPanel.js";
 import Timer from "./utils/timer.js";
 
@@ -25,7 +25,6 @@ class SceneGame extends Scene {
   constructor(props) {
     super(props);
     this.label = 'SceneGame';
-    // this.missilePathPoints = [];
     this.state = {
       svgElement: null,
       missilePaths: [],
@@ -105,8 +104,6 @@ class SceneGame extends Scene {
   initGfx() {
     const spriteMap = Sprite.from("raid-map");
     spriteMap.anchor.set(0);
-    console.log('this.startX', this.startX);
-    console.log('this.startY', this.startY);
     this.addChild(spriteMap);
 
     const scaleFactor = getScaleRatio4x3({ width: spriteMap.width });
@@ -263,12 +260,14 @@ class SceneGame extends Scene {
     this.addChild(uiPanel1);
     uiPanel1.x = text2.x;
     uiPanel1.y = text2.y + text2.height + padding;
-    uiPanel1.updateValue('01:30');
+    uiPanel1.updateValue('02:00');
     this.timerPanel1 = uiPanel1;
-
 
   }
 
+  /**
+   * @deprecated
+   */
   finalAnimComplete() {
     console.log('SceneGame finalAnimComplete');
     this.tl.seek(100);
@@ -349,33 +348,6 @@ class SceneGame extends Scene {
 
     tl.play();
   }
-
-  initMissileDefence ()  {
-    console.log('initMissileDefence');
-    // place missile path points on screen
-    for (const point of this.state.missilePathPoints) {
-      const gfx = new Graphics();
-      gfx.circle(0, 0, 5);
-      gfx.fill({color: 0xff0000, alpha: 0.75});
-      gfx.x = point.x;
-      gfx.y = point.y;
-
-      console.log('adding missile path point at:', point);
-      this.addChild(gfx);
-
-      const graphic = new Graphics();
-      graphic.moveTo(SDI_POS.x, SDI_POS.y);
-      graphic.setStrokeStyle({
-        width: 2,
-        color: 0x00ff00,
-        alpha: 1,
-      });
-      graphic.lineTo(point.x, point.y);
-      graphic.stroke();
-      this.addChild(graphic);
-    }
-  }
-
 }
 
 export default SceneGame;
