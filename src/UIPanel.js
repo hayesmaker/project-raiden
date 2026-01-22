@@ -3,7 +3,7 @@ import gsap from "gsap";
 import {CONSTS} from "./consts.js";
 
 class UIPanel extends Container {
-    constructor() {
+    constructor(value = "test", colour='#00ff00') {
         super();
         this.label = 'UIPanel';
         this.bounds = {
@@ -12,6 +12,8 @@ class UIPanel extends Container {
             width: 180,
             height: 90,
         };
+        this.value = value;
+        this.colour = colour;
         this.initBg();
         this.initText();
     }
@@ -19,7 +21,7 @@ class UIPanel extends Container {
     initBg() {
         console.log(`${this.label} initBg`);
         const graphics = new Graphics();
-        graphics.stroke({ width: 4, color: 0xffffff, alpha: 1})
+        graphics.stroke({ width: 4, color: this.colour, alpha: 1})
         graphics.roundRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height, 5 );
         graphics.stroke();
         this.addChild(graphics);
@@ -34,7 +36,7 @@ class UIPanel extends Container {
         };
 
         console.log(`${this.label} initText`);
-        const text = new Text('E.T.I.', textStyle);
+        const text = new Text(this.value, textStyle);
         text.anchor.set(0);
         text.x = 0;
         text.y = 0;
@@ -43,6 +45,7 @@ class UIPanel extends Container {
         const valueText = new Text('2:00', {
             ...textStyle,
             fontSize: 36,
+            fill: this.colour,
         });
         valueText.anchor.set(0.5);
         valueText.x = this.bounds.x + this.bounds.width / 2;

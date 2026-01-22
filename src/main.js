@@ -17,6 +17,9 @@ gsap.registerPlugin(DrawSVGPlugin);
   // Initialize the application
   await app.init(CONSTS.APP_OPTIONS);
 
+  const RAIDERS = ["RedOctober", "GrimFandango", "Zoops"];
+  let raidIndex = 0;
+
   // Append the application canvas to the document body
   document.getElementById("pixi-container").appendChild(app.canvas);
 
@@ -96,7 +99,7 @@ gsap.registerPlugin(DrawSVGPlugin);
           break;
         case 'ctrl3':
         case '3':
-          scene2.incomingRaid();
+          scene2.incomingRaid(RAIDERS[raidIndex++]);
           scene2.timeLineExtend();
           break;
         case 'ctrl4':

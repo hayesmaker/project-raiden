@@ -2,7 +2,7 @@ import Scene from "./Scene.js";
 import { gsap } from "gsap";
 import { Sprite, Graphics, Text } from "pixi.js";
 
-import { getScaleRatio4x3 } from "./utils/helpers.js";
+import {getScaleRatio4x3, hexNumToString, hexString2Num} from "./utils/helpers.js";
 import { CONSTS } from "./consts.js";
 import UIPanel from "./UIPanel.js";
 import Timer from "./utils/timer.js";
@@ -32,8 +32,11 @@ class SceneGame extends Scene {
       missilesDestroyed: [],
       currentRaidIndex: 0,
       currentRaider: 'RedOctober',
+      timerPanels: [],
+      raiderPanels: [],
+      colours: [0x00ff00, 0xffff00, 0x0000ff],
     }
-    this.timerPanel1 = null;
+    this.topLineText = null;
     this.initData();
     this.initGfx();
     this.initText();
@@ -164,30 +167,55 @@ class SceneGame extends Scene {
 
 
 
-  incomingRaid() {
+  incomingRaid(name = "RedOctober") {
     console.log('incomingRaid');
+    this.state.currentRaider = name;
     const raidIndex = this.state.currentRaidIndex;
+    const colour = this.state.colours[raidIndex];
+
+    const textStyle = {
+      fontFamily: CONSTS.FONT_FAMILY,
+      fontSize: 24,
+      fill: 0xcccccc,
+      align: 'left',
+    };
+
+
+    const raiderName = new Text(this.state.currentRaider, {
+      ...textStyle,
+      fill: this.state.colours[this.state.currentRaidIndex],
+    });
+    raiderName.anchor.set(0);
+    this.addChild(raiderName);
+    raiderName.x = this.topLineText.x + this.topLineText.width + 20;
+    raiderName.y = 20;
+    this.topLineText = raiderName;
+
+
     this.drawMissileLines(
       raidIndex,
       10,
       400,
-      raidIndex === 0 ? '#00ff00' : raidIndex === 1 ? '#ffff00' : '#0000ff'
+      hexNumToString(colour),
     );
-    this.state.currentRaidIndex = raidIndex + 1;
+
+    const uiPanel1 = new UIPanel("ETI", hexNumToString(colour));
+    this.addChild(uiPanel1);
+    uiPanel1.updateValue('02:00');
+    this.state.timerPanels.push(uiPanel1);
+    uiPanel1.x = 20 + raidIndex * 200;
+    uiPanel1.y = 160;
 
     this.timer = new Timer();
     // this.timer.setCountdownTime(1, 30); // 1 minute 30 seconds
-    this.timer.startCountdown(this.timerPanel1, 2, 0,() => {
+    this.timer.startCountdown(uiPanel1, 2, 0,() => {
       console.log('Countdown complete');
     });
+
+    this.state.currentRaidIndex = raidIndex + 1;
   }
 
   drawMissileLines(launchSiteIndex = 0, numMissiles = 10, missileHeight = 400, colour = '#00ff00') {
-    // const numMissiles = 10;
-    // const missileHeight = 400;
-    // const launchSiteIndex = 0;
-    console.log('missilePathPoints:', this.state.missilePathPoints);
-
     for (let i = 0; i < numMissiles; i++) {
       const sourceIndex = Math.floor(Math.random() * this.launcherPositions[launchSiteIndex].length);
       const targetIndex = Math.floor(Math.random() * this.targetPositions.length);
@@ -208,7 +236,7 @@ class SceneGame extends Scene {
 
       this.state.svgElement.appendChild(missilePath);
 
-      // calculate random point along bezier curve
+      // calculate random point along Bézier curve
       // choose random t between 0.25 and 0.75 to avoid clustering at ends
       const t = Math.random() * 0.5 + 0.25;
 
@@ -240,28 +268,31 @@ class SceneGame extends Scene {
       align: 'left',
     };
 
-    const padding = 20;
-    const index = 0;
-    const text = new Text(`Raid Initiated by ${this.state.currentRaider}`, textStyle);
-    text.label = `text${index+1}`;
+    /*
+      const padding = 20;
+      const index = 0;
+    */
+    const text = new Text(`Raid Initiated by:`, textStyle);
+    text.label = `raid-initiated`;
     text.anchor.set(0);
     this.addChild(text);
     text.x = 20;
     text.y = 20;
+    this.topLineText = text;
 
     const text2 = new Text(`Missiles Incoming!`, textStyle);
     text2.label = `text2-missiles-incoming`;
     text2.anchor.set(0);
     this.addChild(text2);
-    text2.x = text.x;
-    text2.y = text.y + text.height + padding;
+    text2.x = 20;
+    text2.y = 80;
 
-    const uiPanel1 = new UIPanel();
-    this.addChild(uiPanel1);
-    uiPanel1.x = text2.x;
-    uiPanel1.y = text2.y + text2.height + padding;
-    uiPanel1.updateValue('02:00');
-    this.timerPanel1 = uiPanel1;
+    // const uiPanel1 = new UIPanel();
+    // this.addChild(uiPanel1);
+    // uiPanel1.x = text2.x;
+    // uiPanel1.y = text2.y + text2.height + padding;
+    // uiPanel1.updateValue('02:00');
+    // this.timerPanel1 = uiPanel1;
 
   }
 
