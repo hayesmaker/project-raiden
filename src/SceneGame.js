@@ -29,10 +29,11 @@ class SceneGame extends Scene {
       svgElement: null,
       missilePaths: [],
       missilePathPoints: [],
+      missilesByRaider: [],
       missilesDestroyed: [],
       currentRaidIndex: 0,
       currentRaider: 'RedOctober',
-      timerPanels: [],
+      timers: [],
       raiderPanels: [],
       colours: [0x00ff00, 0xffff00, 0x0000ff],
     }
@@ -165,8 +166,6 @@ class SceneGame extends Scene {
     // this.incomingRaid();
   }
 
-
-
   incomingRaid(name = "RedOctober") {
     console.log('incomingRaid');
     this.state.currentRaider = name;
@@ -199,14 +198,22 @@ class SceneGame extends Scene {
       hexNumToString(colour),
     );
 
+    this.state.missilesByRaider.push({
+      raider: this.state.currentRaider,
+      raidIndex,
+      originalNumMissiles: 10,
+      missilesDestroyed: 0,
+    });
+
     const uiPanel1 = new UIPanel("ETI", hexNumToString(colour));
     this.addChild(uiPanel1);
     uiPanel1.updateValue('02:00');
-    this.state.timerPanels.push(uiPanel1);
+    // this.state.timerPanels.push(uiPanel1);
     uiPanel1.x = 20 + raidIndex * 200;
     uiPanel1.y = 160;
 
     this.timer = new Timer();
+    this.state.timers.push(this.timer);
     // this.timer.setCountdownTime(1, 30); // 1 minute 30 seconds
     this.timer.startCountdown(uiPanel1, 2, 0,() => {
       console.log('Countdown complete');
@@ -253,8 +260,7 @@ class SceneGame extends Scene {
         3 * (1 - t) * Math.pow(t, 2) * p2.y +
         Math.pow(t, 3) * p3.y;
 
-      const randomPoint = { x: bx, y: by };
-      // this.missilePathPoints.push(randomPoint);
+      const randomPoint = { x: bx, y: by, launchSiteIndex };
       this.state.missilePathPoints.push(randomPoint);
       this.state.missilePaths.push(missilePath);
     }
@@ -268,10 +274,6 @@ class SceneGame extends Scene {
       align: 'left',
     };
 
-    /*
-      const padding = 20;
-      const index = 0;
-    */
     const text = new Text(`Raid Initiated by:`, textStyle);
     text.label = `raid-initiated`;
     text.anchor.set(0);
@@ -286,14 +288,6 @@ class SceneGame extends Scene {
     this.addChild(text2);
     text2.x = 20;
     text2.y = 80;
-
-    // const uiPanel1 = new UIPanel();
-    // this.addChild(uiPanel1);
-    // uiPanel1.x = text2.x;
-    // uiPanel1.y = text2.y + text2.height + padding;
-    // uiPanel1.updateValue('02:00');
-    // this.timerPanel1 = uiPanel1;
-
   }
 
   /**
@@ -338,6 +332,7 @@ class SceneGame extends Scene {
 
     const randomIndex = Math.floor(Math.random() * unDestroyedPoints.length);
     const pointToDestroy = unDestroyedPoints[randomIndex];
+    const raiderIndex = pointToDestroy.launchSiteIndex;
     const pointIndex = this.state.missilePathPoints.indexOf(pointToDestroy);
     this.state.missilesDestroyed.push(pointIndex);
 
@@ -374,7 +369,14 @@ class SceneGame extends Scene {
       console.log('Explosion animation complete');
       this.removeChild(explosion);
       this.state.svgElement.removeChild(this.state.missilePaths[pointIndex]);
-      this.removeChild(defenceLaser)
+      this.removeChild(defenceLaser);
+      const raidInfo = this.state.missilesByRaider[raiderIndex];
+      raidInfo.missilesDestroyed += 1;  
+      if (raidInfo.missilesDestroyed >= raidInfo.originalNumMissiles) {
+        console.log(`All missiles from ${raidInfo.raider} destroyed!`);
+        this.state.timers[raiderIndex].stop();
+      }
+
     });
 
     tl.play();
