@@ -12,6 +12,8 @@ const SDI_POS = {
   y: 420
 };
 
+const RAID_TIMER = [0,5];  // [mins, secs]
+
 class SceneGame extends Scene {
 
   get svgEls() {
@@ -36,8 +38,10 @@ class SceneGame extends Scene {
       timers: [],
       raiderPanels: [],
       colours: [0x00ff00, 0xffff00, 0x0000ff],
+      casualties: 0,
     }
     this.topLineText = null;
+    this.casualtiesUi = null;
     this.initData();
     this.initGfx();
     this.initText();
@@ -142,14 +146,15 @@ class SceneGame extends Scene {
       this.addChild(launcher);
     }
 
-    for (const pos of this.targetPositions) {
-      const target = new Graphics();
-      target.circle(0, 0, 10);
-      target.fill(0xff0000);
-      target.x = pos.x;
-      target.y = pos.y
-      this.addChild(target);
-    }
+    // Debug target Coordinates - or draw bases at target locations.
+    // for (const pos of this.targetPositions) {
+    //   const target = new Graphics();
+    //   target.circle(0, 0, 10);
+    //   target.fill(0xff0000);
+    //   target.x = pos.x;
+    //   target.y = pos.y
+    //   this.addChild(target);
+    // }
 
     // draw svgs
     // create html svg and add to DOM
@@ -179,17 +184,15 @@ class SceneGame extends Scene {
       align: 'left',
     };
 
-
     const raiderName = new Text(this.state.currentRaider, {
       ...textStyle,
       fill: this.state.colours[this.state.currentRaidIndex],
     });
     raiderName.anchor.set(0);
     this.addChild(raiderName);
-    raiderName.x = this.topLineText.x + this.topLineText.width + 20;
+    raiderName.x = this.topLineText.x + this.topLineText.width + 60;
     raiderName.y = 20;
     this.topLineText = raiderName;
-
 
     this.drawMissileLines(
       raidIndex,
@@ -205,21 +208,101 @@ class SceneGame extends Scene {
       missilesDestroyed: 0,
     });
 
+    if (raidIndex === 0) {
+      // draw casualties ui panel
+      const uiPanel = new UIPanel("Casualties", "#ffffff", 380);
+      this.addChild(uiPanel);
+      uiPanel.x = 20;
+      uiPanel.y = 220;
+      uiPanel.updateValue("0");
+      this.casualtiesUi = uiPanel;
+    }
+
     const uiPanel1 = new UIPanel("ETI", hexNumToString(colour));
     this.addChild(uiPanel1);
-    uiPanel1.updateValue('02:00');
-    // this.state.timerPanels.push(uiPanel1);
-    uiPanel1.x = 20 + raidIndex * 200;
-    uiPanel1.y = 160;
+    uiPanel1.updateValue(`0${RAID_TIMER[0]}:${RAID_TIMER[1]}`);
+    uiPanel1.x = raiderName.x;
+    uiPanel1.y = 80;
 
     this.timer = new Timer();
     this.state.timers.push(this.timer);
     // this.timer.setCountdownTime(1, 30); // 1 minute 30 seconds
-    this.timer.startCountdown(uiPanel1, 2, 0,() => {
-      console.log('Countdown complete');
+    this.timer.startCountdown(uiPanel1, RAID_TIMER[0], RAID_TIMER[1],() => {
+      console.log('timer complete callback', raidIndex);
+      this.timerCountdownComplete(raidIndex);
     });
 
     this.state.currentRaidIndex = raidIndex + 1;
+  }
+
+  addCasualties () {
+    function formatCasualties(num) {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+    const newCasualties = 150000 + Math.floor(Math.random() * 1000000);
+    this.state.casualties += newCasualties;
+    this.casualtiesUi.updateValue(formatCasualties(this.state.casualties));
+  }
+
+  timerCountdownComplete(raidIndex) {
+    console.log('this.missileByRaider', this.state.missilesByRaider[raidIndex]);
+    const activeMissilePaths = this.state.missilePaths.filter((path) => {
+      return parseInt(path.dataset.raidIndex) === raidIndex && parseInt(path.dataset.active) === 1;
+    });
+    activeMissilePaths.forEach((path, i) => {
+      const x = +path.dataset.targetX;
+      const y = +path.dataset.targetY;
+      gsap.to(path, {
+        duration: 1,
+        drawSVG: "100% 100%",
+        ease: "power1.in",
+        delay: i * 0.1,
+        // stagger: 0.1,
+        onComplete: () => {
+          makeImpactPulse(x, y);
+          makeImpactFlash(x, y);
+          this.addCasualties();
+        },
+      });
+    });
+
+    const makeImpactPulse = (x, y, color = 0xffffff) => {
+      const pulse = new Graphics();
+      pulse.circle(0, 0, 8);
+      pulse.fill(color);
+      pulse.position.set(x, y);
+      this.addChild(pulse);
+      gsap.fromTo(
+          pulse,
+          { alpha: 0.8, scale: 0 },
+          {
+            alpha: 0,
+            scale: 8,
+            duration: 1.7,
+            ease: "power1.out",
+          }
+      );
+    }
+
+    const makeImpactFlash = (x, y, color = 0xff0000) => {
+      const flash = new Graphics();
+      flash.circle(0, 0, 8);
+      flash.fill(color);
+      flash.position.set(x, y);
+      this.addChild(flash);
+      gsap.fromTo(
+          flash,
+          { alpha: 0.8, scale: 0 },
+          {
+            alpha: 0,
+            scale: 2,
+            yoyo: true,
+            duration: 0.3,
+            ease: "power1.out",
+            onComplete: () => flash.destroy(),
+          }
+      );
+    }
   }
 
   drawMissileLines(launchSiteIndex = 0, numMissiles = 10, missileHeight = 400, colour = '#00ff00') {
@@ -240,6 +323,11 @@ class SceneGame extends Scene {
       missilePath.setAttribute("stroke-opacity", "0.5");
       missilePath.setAttribute("fill", "none");
       missilePath.setAttribute("class", `missile-path-${launchSiteIndex}`);
+
+      missilePath.setAttribute("data-target-x", p3.x);
+      missilePath.setAttribute("data-target-y", p3.y);
+      missilePath.setAttribute("data-raid-index", `${launchSiteIndex}`);
+      missilePath.setAttribute("data-active", "1");
 
       this.state.svgElement.appendChild(missilePath);
 
@@ -282,7 +370,7 @@ class SceneGame extends Scene {
     text.y = 20;
     this.topLineText = text;
 
-    const text2 = new Text(`Missiles Incoming!`, textStyle);
+    const text2 = new Text(`Missiles Incoming:`, textStyle);
     text2.label = `text2-missiles-incoming`;
     text2.anchor.set(0);
     this.addChild(text2);
@@ -335,6 +423,8 @@ class SceneGame extends Scene {
     const raiderIndex = pointToDestroy.launchSiteIndex;
     const pointIndex = this.state.missilePathPoints.indexOf(pointToDestroy);
     this.state.missilesDestroyed.push(pointIndex);
+    const missilePath = this.state.missilePaths[pointIndex];
+    missilePath.dataset.active = "0";
 
     // create explosion graphic at that point
     const explosion = new Graphics();

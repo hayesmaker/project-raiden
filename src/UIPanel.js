@@ -3,15 +3,16 @@ import gsap from "gsap";
 import {CONSTS} from "./consts.js";
 
 class UIPanel extends Container {
-    constructor(value = "test", colour='#00ff00') {
+    constructor(value = "test", colour='#00ff00', width = 180) {
         super();
         this.label = 'UIPanel';
         this.bounds = {
             x: 0,
             y: 40,
-            width: 180,
+            width,
             height: 90,
         };
+        this.padding = 10;
         this.value = value;
         this.colour = colour;
         this.initBg();
@@ -32,7 +33,7 @@ class UIPanel extends Container {
             fontFamily: CONSTS.FONT_FAMILY,
             fontSize: 24,
             fill: 0xcccccc,
-            align: 'left',
+            align: 'right',
         };
 
         console.log(`${this.label} initText`);
@@ -42,14 +43,14 @@ class UIPanel extends Container {
         text.y = 0;
         this.addChild(text);
 
-        const valueText = new Text('2:00', {
+        const valueText = new Text('02:00', {
             ...textStyle,
             fontSize: 36,
             fill: this.colour,
         });
-        valueText.anchor.set(0.5);
-        valueText.x = this.bounds.x + this.bounds.width / 2;
-        valueText.y = this.bounds.y + this.bounds.height / 2;
+        valueText.anchor.set(1, 0.5);
+        valueText.x = this.bounds.x + this.bounds.width - this.padding;
+        valueText.y = this.bounds.y + this.bounds.height /2;
         this.addChild(valueText);
         this.valueText = valueText;
     }
@@ -60,6 +61,8 @@ class UIPanel extends Container {
 
     updateValue (val) {
         this.valueText.text = val;
+        // console.log('this.valueText.text', this.valueText.width);
+        // this.valueText.x = this.bounds.x + this.bounds.width - this.valueText.width;
     }
 }
 
