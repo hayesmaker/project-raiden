@@ -36,7 +36,7 @@ class SceneGame extends Scene {
       currentRaidIndex: 0,
       currentRaider: 'RedOctober',
       timers: [],
-      raiderPanels: [],
+      // raiderPanels: [],
       colours: [0x00ff00, 0xffff00, 0x0000ff],
       casualties: 0,
     }
@@ -206,6 +206,7 @@ class SceneGame extends Scene {
       raidIndex,
       originalNumMissiles: 10,
       missilesDestroyed: 0,
+      raidComplete: false,
     });
 
     if (raidIndex === 0) {
@@ -246,10 +247,14 @@ class SceneGame extends Scene {
 
   timerCountdownComplete(raidIndex) {
     console.log('this.missileByRaider', this.state.missilesByRaider[raidIndex]);
+    const raidInfo = this.state.missilesByRaider[raidIndex];
+    raidInfo.raidComplete = true;
+    const isRaidOver = this.state.missilesByRaider.every((raid) => raid.raidComplete);
     const activeMissilePaths = this.state.missilePaths.filter((path) => {
       return parseInt(path.dataset.raidIndex) === raidIndex && parseInt(path.dataset.active) === 1;
     });
     activeMissilePaths.forEach((path, i) => {
+      path.dataset.acive = "0";
       const x = +path.dataset.targetX;
       const y = +path.dataset.targetY;
       gsap.to(path, {
@@ -262,8 +267,14 @@ class SceneGame extends Scene {
           makeImpactPulse(x, y);
           makeImpactFlash(x, y);
           this.addCasualties();
+          if (i === activeMissilePaths.length - 1 && isRaidOver) {
+            this.gameOver('allRaidsComplete', this.state.missilesByRaider);
+          }
         },
       });
+
+
+
     });
 
     const makeImpactPulse = (x, y, color = 0xffffff) => {
@@ -463,6 +474,7 @@ class SceneGame extends Scene {
       const raidInfo = this.state.missilesByRaider[raiderIndex];
       raidInfo.missilesDestroyed += 1;  
       if (raidInfo.missilesDestroyed >= raidInfo.originalNumMissiles) {
+        this.gameOver('raiderDefeated', raidInfo);
         console.log(`All missiles from ${raidInfo.raider} destroyed!`);
         this.state.timers[raiderIndex].stop();
       }
@@ -470,6 +482,10 @@ class SceneGame extends Scene {
     });
 
     tl.play();
+  }
+
+  gameOver(reason, raidInfo) {
+    console.log('SceneGame gameOver', reason, raidInfo);
   }
 }
 
