@@ -12,7 +12,7 @@ const SDI_POS = {
   y: 420
 };
 
-const RAID_TIMER = [0,5];  // [mins, secs]
+const RAID_TIMER = [2,0];  // [mins, secs]
 
 class SceneGame extends Scene {
 
@@ -30,15 +30,13 @@ class SceneGame extends Scene {
     this.state = {
       svgElement: null,
       missilePaths: [],
-      missilePathPoints: [],
       missilesByRaider: [],
-      missilesDestroyed: [],
       currentRaidIndex: 0,
-      currentRaider: 'RedOctober',
+      currentRaider: 'Unknown',
       timers: [],
-      // raiderPanels: [],
       colours: [0x00ff00, 0xffff00, 0x0000ff],
       casualties: 0,
+      gameOver: false,
     }
     this.topLineText = null;
     this.casualtiesUi = null;
@@ -205,7 +203,6 @@ class SceneGame extends Scene {
       raider: this.state.currentRaider,
       raidIndex,
       originalNumMissiles: 10,
-      missilesDestroyed: 0,
       raidComplete: false,
     });
 
@@ -254,9 +251,9 @@ class SceneGame extends Scene {
       return parseInt(path.dataset.raidIndex) === raidIndex && parseInt(path.dataset.active) === 1;
     });
     activeMissilePaths.forEach((path, i) => {
-      path.dataset.acive = "0";
-      const x = +path.dataset.targetX;
-      const y = +path.dataset.targetY;
+      path.setAttribute("data-active", "0");
+      const x = path.dataset.targetX;
+      const y = path.dataset.targetY;
       gsap.to(path, {
         duration: 1,
         drawSVG: "100% 100%",
@@ -326,21 +323,6 @@ class SceneGame extends Scene {
       const p2 = { x: this.targetPositions[targetIndex].x, y: this.targetPositions[targetIndex].y - missileHeight };
       const p3 = { ...this.targetPositions[targetIndex] };
 
-      const missilePath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      // d="M 100 200 C 100 100 300 100 300 200"
-      missilePath.setAttribute("d", `M ${p0.x} ${p0.y} C ${p1.x} ${p1.y} ${p2.x} ${p2.y} ${p3.x} ${p3.y}`);
-      missilePath.setAttribute("stroke", colour);
-      missilePath.setAttribute("stroke-width", "5");
-      missilePath.setAttribute("stroke-opacity", "0.5");
-      missilePath.setAttribute("fill", "none");
-      missilePath.setAttribute("class", `missile-path-${launchSiteIndex}`);
-
-      missilePath.setAttribute("data-target-x", p3.x);
-      missilePath.setAttribute("data-target-y", p3.y);
-      missilePath.setAttribute("data-raid-index", `${launchSiteIndex}`);
-      missilePath.setAttribute("data-active", "1");
-
-      this.state.svgElement.appendChild(missilePath);
 
       // calculate random point along Bézier curve
       // choose random t between 0.25 and 0.75 to avoid clustering at ends
@@ -359,8 +341,26 @@ class SceneGame extends Scene {
         3 * (1 - t) * Math.pow(t, 2) * p2.y +
         Math.pow(t, 3) * p3.y;
 
-      const randomPoint = { x: bx, y: by, launchSiteIndex };
-      this.state.missilePathPoints.push(randomPoint);
+      // const randomPoint = { x: bx, y: by, launchSiteIndex };
+
+      const missilePath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      // d="M 100 200 C 100 100 300 100 300 200"
+      missilePath.setAttribute("d", `M ${p0.x} ${p0.y} C ${p1.x} ${p1.y} ${p2.x} ${p2.y} ${p3.x} ${p3.y}`);
+      missilePath.setAttribute("stroke", colour);
+      missilePath.setAttribute("stroke-width", "5");
+      missilePath.setAttribute("stroke-opacity", "0.5");
+      missilePath.setAttribute("fill", "none");
+      missilePath.setAttribute("class", `missile-path-${launchSiteIndex}`);
+
+      missilePath.setAttribute("data-target-x", p3.x);
+      missilePath.setAttribute("data-target-y", p3.y);
+      missilePath.setAttribute("data-raid-index", `${launchSiteIndex}`);
+      missilePath.setAttribute("data-active", "1");
+      missilePath.setAttribute("data-defence-x", Math.floor(bx).toString());
+      missilePath.setAttribute("data-defence-y", Math.floor(by).toString());
+
+      this.state.svgElement.appendChild(missilePath);
+      // this.state.missilePathPoints.push(randomPoint);
       this.state.missilePaths.push(missilePath);
     }
   }
@@ -418,38 +418,49 @@ class SceneGame extends Scene {
   }
 
   destroyMissile() {
-    console.log('destroyMissile');
-    // pick a random missile path point that hasn't been destroyed yet
-    const unDestroyedPoints = this.state.missilePathPoints.filter((point, index) => {
-      return !this.state.missilesDestroyed.includes(index);
-    });
-
-    if (unDestroyedPoints.length === 0) {
-      console.log('All missiles already destroyed');
+    if (this.state.gameOver) {
       return;
     }
+    console.log('destroyMissile');
 
-    const randomIndex = Math.floor(Math.random() * unDestroyedPoints.length);
-    const pointToDestroy = unDestroyedPoints[randomIndex];
-    const raiderIndex = pointToDestroy.launchSiteIndex;
-    const pointIndex = this.state.missilePathPoints.indexOf(pointToDestroy);
-    this.state.missilesDestroyed.push(pointIndex);
-    const missilePath = this.state.missilePaths[pointIndex];
-    missilePath.dataset.active = "0";
+    const getRandomActiveMissilePath = () => {
+      // Filter only active missile paths
+      const activeMissiles = this.state.missilePaths.filter(
+        (path) => {
+          return path.getAttribute("data-active") === "1"
+        }
+      );
+      // If none are active, return null (or handle as needed)
+      if (activeMissiles.length === 0) {
+        return null;
+      }
+      const randomIndex = Math.floor(Math.random() * activeMissiles.length);
+      return activeMissiles[randomIndex];
+    }
+
+    const missilePathToDestroy = getRandomActiveMissilePath();
+    if (!missilePathToDestroy) {
+      this.gameOver('allMissilesDestroyed', this.state.missilesByRaider);
+      return; // No active missiles to destroy
+    }
+    missilePathToDestroy.setAttribute('data-active', '0');
+    const pointX = missilePathToDestroy.getAttribute("data-defence-x");
+    const pointY = missilePathToDestroy.getAttribute("data-defence-y");
+    const raiderIndex = missilePathToDestroy.getAttribute("data-raid-index");
 
     // create explosion graphic at that point
     const explosion = new Graphics();
     explosion.circle(0, 0, Math.random() * 10 + 20);
     explosion.fill({color: 0xffffff, alpha: 0.75});
-    explosion.x = pointToDestroy.x;
-    explosion.y = pointToDestroy.y;
+    explosion.x = pointX;
+    explosion.y = pointY;
     this.addChild(explosion);
 
     let defenceLaser;
     // create a timeline to animate explosion
     const tl = gsap.timeline({paused: true});
     tl.call(() => {
-      console.log('Starting explosion animation at point index:', pointIndex);
+      // console.log('Starting explosion animation at point index:', pointIndex);
       defenceLaser = new Graphics();
       defenceLaser.moveTo(SDI_POS.x, SDI_POS.y);
       defenceLaser.setStrokeStyle({
@@ -457,7 +468,7 @@ class SceneGame extends Scene {
         color: 0xffffff,
         alpha: 0.8,
       });
-      defenceLaser.lineTo(pointToDestroy.x, pointToDestroy.y);
+      defenceLaser.lineTo(pointX, pointY);
       defenceLaser.stroke();
       this.addChild(defenceLaser);
     })
@@ -469,15 +480,8 @@ class SceneGame extends Scene {
     tl.call(() => {
       console.log('Explosion animation complete');
       this.removeChild(explosion);
-      this.state.svgElement.removeChild(this.state.missilePaths[pointIndex]);
+      this.state.svgElement.removeChild(missilePathToDestroy);
       this.removeChild(defenceLaser);
-      const raidInfo = this.state.missilesByRaider[raiderIndex];
-      raidInfo.missilesDestroyed += 1;  
-      if (raidInfo.missilesDestroyed >= raidInfo.originalNumMissiles) {
-        this.gameOver('raiderDefeated', raidInfo);
-        console.log(`All missiles from ${raidInfo.raider} destroyed!`);
-        this.state.timers[raiderIndex].stop();
-      }
 
     });
 
@@ -485,6 +489,13 @@ class SceneGame extends Scene {
   }
 
   gameOver(reason, raidInfo) {
+    if (this.state.gameOver) {
+      return;
+    }
+    this.state.timers.forEach((timer) => {
+      timer.stop();
+    });
+    this.state.gameOver = true;
     console.log('SceneGame gameOver', reason, raidInfo);
   }
 }
